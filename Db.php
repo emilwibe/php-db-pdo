@@ -68,10 +68,13 @@ class Db {
 
         if ( is_string( $where ) ) {
             $this->query .= ' WHERE ' . $where;
+        } elseif ( is_array( $where ) ) {
+            $this->query .= ' WHERE ' . implode(" AND ", $where );
         }
 
         $stmt = $this->conn->query( $this->query );
 
+        //return $this->query;
         return $stmt->fetchAll();
     }
 }
