@@ -27,7 +27,7 @@ class Db {
      * Data Source Name
      */
     private $dsn;
-    private $pdo;
+    private $conn;
 
     private $query;
 
@@ -41,7 +41,9 @@ class Db {
         $this->dsn = 'mysql:host=' . $this->db_creds['host'] . ';dbname=' . $this->db_creds['dbname'] . ';charset=' . $this->db_creds['charset'];
     }
     public function db_connect() {
-        $this->pdo = new PDO( $this->dsn, $this->db_creds['username'], $this->db_creds['password'] );
+        $this->conn = new PDO( $this->dsn, $this->db_creds['username'], $this->db_creds['password'] );
+        $this->conn->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+        $this->conn->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ );
     }
 
     /**
@@ -51,7 +53,7 @@ class Db {
      * @param string $columns Desired columns
      * @return array Contains the returned rows from the select query.
      */
-    public function get( $tableName, $numRows = null, $columns = '*' ) {
+    public function get( $tableName, $columns = '*' ) {
         
         if (empty($columns)) {
             $columns = '*';
@@ -65,24 +67,8 @@ class Db {
 
         $this->query = 'SELECT ' . $column . ' FROM ' . $tableName;
 
-        
-        $stmt        = $this->buildQuery($numRows);
+        $stmt = $this->conn->query( $this->query );
 
-        
-
-        $stmt->execute();
-        $this->lastError     = $stmt->errorInfo();
-        $this->lastErrorCode = $stmt->errorCode();
-        $this->rowCount      = $stmt->rowCount();
-
-        if (in_array('SQL_CALC_FOUND_ROWS', $this->queryOptions)) {
-            $totalStmt        = $this->pdo()->query('SELECT FOUND_ROWS()');
-            $this->totalCount = $totalStmt->fetchColumn();
-        }
-
-        $result = $this->buildResult($stmt);
-        $this->reset();
-
-        return $result;
+        return $stmt->fetchAll();
     }
 }
