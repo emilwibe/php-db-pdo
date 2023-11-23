@@ -48,12 +48,11 @@ class Db {
 
     /**
      * @param string  $tableName The name of the database table to work with.
-     * @param int|array $numRows Array to define SQL limit in format Array ($count, $offset)
-     *                               or only $count
-     * @param string $columns Desired columns
+     * @param string|array $columns Desired columns
+     * @param string|array $where
      * @return array Contains the returned rows from the select query.
      */
-    public function get( $tableName, $columns = '*' ) {
+    public function get( $tableName, $columns = '*', $where = null ) {
         
         if (empty($columns)) {
             $columns = '*';
@@ -66,6 +65,10 @@ class Db {
         }
 
         $this->query = 'SELECT ' . $column . ' FROM ' . $tableName;
+
+        if ( is_string( $where ) ) {
+            $this->query .= ' WHERE ' . $where;
+        }
 
         $stmt = $this->conn->query( $this->query );
 
