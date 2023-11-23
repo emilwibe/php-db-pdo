@@ -28,9 +28,7 @@ class Db {
      */
     private $dsn;
     private $conn;
-
-    private $query;
-
+    private $db_query;
     public function __construct( $host = null, $username = null, $password = null, $dbname = null, $charset = null ){
         $this->db_creds['host'] = $host;
         $this->db_creds['username'] = $username;
@@ -53,7 +51,6 @@ class Db {
      * @return array Contains the returned rows from the select query.
      */
     public function get( $tableName, $columns = '*', $where = null ) {
-        
         if (empty($columns)) {
             $columns = '*';
         }
@@ -64,17 +61,24 @@ class Db {
             $column = $columns;
         }
 
-        $this->query = 'SELECT ' . $column . ' FROM ' . $tableName;
+        $this->db_query = 'SELECT ' . $column . ' FROM ' . $tableName;
 
-        if ( is_string( $where ) ) {
-            $this->query .= ' WHERE ' . $where;
-        } elseif ( is_array( $where ) ) {
-            $this->query .= ' WHERE ' . implode(" AND ", $where );
+        $prepare_args = array();
+
+        if ( is_array( $where ) && is_array( $where[0] )) {
+            $this->db_query .= ' WHERE ';
+
+            foreach ( $where as $value ) {
+
+                $this->db_query .= $value[0] . " " . $value[1] . " ? AND ";
+                $prepare_args[] = $value[2];
+
+            }
+            $this->db_query = rtrim($this->db_query, " AND");
         }
+        $stmt = $this->conn->prepare( $this->db_query );
+        $stmt->execute( $prepare_args );
 
-        $stmt = $this->conn->query( $this->query );
-
-        //return $this->query;
         return $stmt->fetchAll();
     }
 }
